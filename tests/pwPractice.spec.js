@@ -47,7 +47,7 @@ test("Verify on clicking My Button alert appears", async({page})=>{
     })
 })
 
-test.only("Verify double click of the button", async({page})=>{
+test("Verify double click of the button", async({page})=>{
     const dblBut = page.locator("button", {hasText:"Double click Here"});
     await dblBut.dblclick();
     page.on('dialog', async dialog =>{
@@ -55,4 +55,43 @@ test.only("Verify double click of the button", async({page})=>{
         expect.soft(dialogMessage).toBe("Double Click Successfull");
         dialog.accept();
     })
+})
+
+test("Verify that button in iFrame", async({page, context})=>{
+    const iframe = page.frameLocator("#iframe1");
+    const [newTab] = await Promise.all([
+        context.waitForEvent('page'),
+        iframe.locator('a', {hasText: "Jason Morrow"}).click()
+    ])
+    await newTab.waitForLoadState('domcontentloaded');
+    const newTabUrl = newTab.url();
+    expect(newTabUrl).toBe("https://www.etsy.com/shop/jasonmorrow/?etsrc=sdt");
+})
+
+test("Test all elements", async({page})=>{
+    await page.locator("#ta1").fill("I am watching cricket match.");
+    await page.locator('textarea', { hasText: "The cat was playing in the garden." }).fill("On hotstar");
+    await page.locator("//form[@name='form1']/input[@type='text']").fill("kerala");
+    await page.locator("#radio1").click();
+    await page.locator("#checkbox1").uncheck();
+    await page.locator("#checkbox2").check();
+
+    await page.locator("#prompt").click();
+    page.on('dialog', async dialog =>{
+        dialog.accept("Hello QAFox");
+    })
+    await page.locator("#testdoubleclick").dblclick();
+    await page.waitForTimeout(5000);
+})
+
+test("Test tab switching", async({page, context})=>{
+    const bloggerButton = page.locator('a', {hasText: "Blogger"});
+    const [newTab] = await Promise.all([
+        context.waitForEvent('page'),
+        bloggerButton.click()
+    ])
+    const newUrl = newTab.url();
+    expect.soft(newUrl).toBe("https://www.blogger.com/about/?bpli=1")
+    await page.bringToFront();
+    await page.locator("#ta1").fill("I am watching cricket match.");
 })
